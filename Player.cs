@@ -49,11 +49,16 @@ public class Player : MonoBehaviour
         //Vector 2 means its using 2d space vectors
         Vector2 playerVelocity = new Vector2(controlThrow * runSpeed, myRigidBody.velocity.y);
 
+
+        //Creating an instance of velocity
         myRigidBody.velocity = playerVelocity;
 
+
+        //Checking if the player is actually moving
         bool playerHorizontalSpeed = Mathf.Abs(myRigidBody.velocity.x) > Mathf.Epsilon;
         
-            myAnimator.SetBool("Running", playerHorizontalSpeed);
+        //If they are running, then activate the running animation
+        myAnimator.SetBool("Running", playerHorizontalSpeed);
     }
 
     private void TurningAround()
