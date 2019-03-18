@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField] float runSpeed = 5f;
     [SerializeField] float jumpSpeed = 5f;
     [SerializeField] float climbSpeed = 5f;
+    [SerializeField] Vector2 deathKick = new Vector2(25f, 25f);
 
     //States (setting up to check if player is alive or not)
     bool isAlive = true;
@@ -19,7 +20,9 @@ public class Player : MonoBehaviour
     //Initializing the component of the object (in this case the player)
     Rigidbody2D myRigidBody;
     Animator myAnimator;
-    Collider2D myCollider2D;
+    CapsuleCollider2D myBodyCollider2D;
+    BoxCollider2D myFeet;
+    float startGravity;
 
 
     // Start is called before the first frame update
@@ -27,16 +30,20 @@ public class Player : MonoBehaviour
     {
         myRigidBody = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
-        myCollider2D = GetComponent<Collider2D>();
+        myBodyCollider2D = GetComponent<CapsuleCollider2D>();
+        startGravity = myRigidBody.gravityScale;
+        myFeet = GetComponent<BoxCollider2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!isAlive) { return; }
         Run();
         TurningAround();
         Jump();
-        //ClimbLadder();
+        Climbing();
+        Death();
     }
 
 
@@ -81,7 +88,7 @@ public class Player : MonoBehaviour
     private void Jump()
     {
 
-        if (!myCollider2D.IsTouchingLayers(LayerMask.GetMask("Ground")))
+        if (!myFeet.IsTouchingLayers(LayerMask.GetMask("Ground")))
         {
             return;
         }
@@ -94,25 +101,38 @@ public class Player : MonoBehaviour
         }
     }
 
-    /*
-     * Doesnt work at the moment
-     * 
-     * 
-     * 
-    private void ClimbLadder()
+
+
+    private void Climbing()
     {
-        if(!myCollider2D.IsTouchingLayers(LayerMask.GetMask("Climbing")))
+        if (!myFeet.IsTouchingLayers(LayerMask.GetMask("Climbing")))
         {
+            myAnimator.SetBool("climbing", false);
+            myRigidBody.gravityScale = startGravity;
             return;
         }
 
-        float controlThrow = CrossPlatformInputManager.GetAxis("Vertical");
-        Vector2 climbVelocity = new Vector2(myRigidBody.velocity.x, controlThrow * climbSpeed);
-        myRigidBody.velocity = climbVelocity;
+            
+        
+            float controlThrow = CrossPlatformInputManager.GetAxis("Vertical");
+            Vector2 climbVelocity = new Vector2(myRigidBody.velocity.x, controlThrow * climbSpeed);
+            myRigidBody.velocity = climbVelocity;
+            myRigidBody.gravityScale = 0f;
+
+            bool playerHasVerticalSpeed = Mathf.Abs(myRigidBody.velocity.y) > Mathf.Epsilon;
+            myAnimator.SetBool("climbing", playerHasVerticalSpeed);
+        
     }
 
-    */
-
+    private void Death()
+    {
+        if (myBodyCollider2D.IsTouchingLayers(LayerMask.GetMask("Enemy", "Hazards")))
+        {
+            isAlive = false;
+            myAnimator.SetTrigger("Death");
+            GetComponent<Rigidbody2D>().velocity = deathKick;
+        }
+    }
 
 
 
